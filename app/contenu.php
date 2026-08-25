@@ -49,6 +49,21 @@ function rec_decalage( string $fuseau, string $reference = 'Europe/Paris' ): ?in
 }
 
 /**
+ * « -1 heure », « +3 heures ». Le pluriel se decide a 1, pas a 0 : « -1 heures »
+ * est le genre de detail qui fait lire une page comme une page traduite a la
+ * machine, et il y en a trois mille.
+ */
+function rec_heures( int $dec, string $langue ): string {
+	$n   = sprintf( '%+d', $dec );
+	$mot = array(
+		'en' => abs( $dec ) <= 1 ? 'hour' : 'hours',
+		'fr' => abs( $dec ) <= 1 ? 'heure' : 'heures',
+		'es' => abs( $dec ) <= 1 ? 'hora' : 'horas',
+	)[ $langue ];
+	return $n . ' ' . $mot;
+}
+
+/**
  * Le chapo de la page ville. Assemble a partir de faits, phrase par phrase.
  * Chaque phrase n'apparait que si la donnee qui la justifie existe.
  */
@@ -59,7 +74,6 @@ function rec_chapo( array $pays, array $ville, string $langue ): string {
 	$part    = (float) $ville['part_urbaine'];
 	$n       = rec_nombre( $pop, $langue );
 	$vn      = $ville['nom'];
-	$pn      = $pays['nom'];
 	$p = array();
 
 	// 1. Ce qu'elle pese, et par rapport a quoi.
@@ -90,7 +104,7 @@ function rec_chapo( array $pays, array $ville, string $langue ): string {
 			'es' => '%s es una población pequeña %s, con %s habitantes.',
 		),
 	);
-	$p[] = sprintf( $taille[ $tranche ][ $langue ], $vn, rec_de_pays( $pn, $langue ), $n );
+	$p[] = sprintf( $taille[ $tranche ][ $langue ], $vn, rec_de_pays( $pays, $langue ), $n );
 
 	// 2. Sa place dans le pays : capitale, premiere ville, ou rang.
 	if ( ! empty( $ville['capitale'] ) ) {
@@ -110,7 +124,7 @@ function rec_chapo( array $pays, array $ville, string $langue ): string {
 			'en' => 'It ranks %d among the cities we cover %s.',
 			'fr' => 'Elle occupe le %de rang parmi les villes que nous couvrons %s.',
 			'es' => 'Ocupa el puesto %d entre las ciudades que cubrimos %s.',
-		)[ $langue ], $rang, rec_de_pays( $pn, $langue ) );
+		)[ $langue ], $rang, rec_de_pays( $pays, $langue ) );
 	}
 
 	// 3. Son poids relatif — seulement s'il est reellement notable, ET
@@ -124,13 +138,13 @@ function rec_chapo( array $pays, array $ville, string $langue ): string {
 	}
 	if ( $part >= 0.20 ) {
 		$p[] = sprintf( array(
-			'en' => 'Roughly %d%% of the country’s urban population lives here, so a national hiring plan usually starts in this city.',
-			'fr' => 'Environ %d %% de la population urbaine du pays y vit : un plan de recrutement national commence en général ici.',
-			'es' => 'Aquí vive alrededor del %d%% de la población urbana del país, por lo que un plan nacional suele empezar en esta ciudad.',
+			'en' => 'Roughly %d%% of the country’s urban population lives here, so an outsourcing plan for this country usually starts in this city.',
+			'fr' => 'Environ %d %% de la population urbaine du pays y vit : un plan d’externalisation sur ce pays commence en général ici.',
+			'es' => 'Aquí vive alrededor del %d%% de la población urbana del país, por lo que un plan de externalización en este país suele empezar en esta ciudad.',
 		)[ $langue ], (int) round( $part * 100 ) );
 	} elseif ( $part <= 0.02 && 'minuscule' !== $tranche ) {
 		$p[] = array(
-			'en' => 'It holds a small share of the country’s urban population, so it works better as a secondary site than as a first location.',
+			'en' => 'It holds a small share of the country’s urban population, so it works better as a secondary delivery site than as a first location.',
 			'fr' => 'Elle ne représente qu’une faible part de la population urbaine du pays : elle fonctionne mieux en site secondaire qu’en première implantation.',
 			'es' => 'Representa una parte pequeña de la población urbana del país: funciona mejor como sede secundaria que como primera ubicación.',
 		)[ $langue ];
@@ -139,14 +153,24 @@ function rec_chapo( array $pays, array $ville, string $langue ): string {
 	return implode( ' ', $p );
 }
 
-/** « in Canada » / « au Canada » / « en Canada » — la preposition varie. */
-function rec_de_pays( string $nom, string $langue ): string {
-	if ( 'en' === $langue ) { return 'in ' . $nom; }
-	if ( 'es' === $langue ) { return 'en ' . $nom; }
-	// Le francais est le seul des trois a demander un choix, et il n'y a pas
-	// de regle sure sans genre grammatical : on prend la forme qui marche
-	// partout plutot qu'une regle qui se trompe une fois sur cinq.
-	return 'en ' . $nom;
+/**
+ * « in Canada », « au Canada », « en Canadá ».
+ *
+ * La forme complete est PRE-CALCULEE par geo/noms.py, pas devinee ici. Le
+ * francais demande quatre articles — au / en / aux / a — dont le choix depend
+ * du genre, du nombre et de l'initiale du nom, et aucun des trois n'est dans
+ * le jeu de donnees geographique. La regle plus ses exceptions vit donc dans
+ * un script qui imprime ses 243 resultats pour relecture, et le site se
+ * contente de lire le resultat.
+ */
+function rec_de_pays( array $pays, string $langue ): string {
+	$iso = (string) ( $pays['iso'] ?? '' );
+	$n   = rec_noms_pays();
+	if ( isset( $n[ $iso ]['dans'][ $langue ] ) ) {
+		return $n[ $iso ]['dans'][ $langue ];
+	}
+	$nom = rec_nom_pays( $pays, $langue );
+	return ( 'en' === $langue ? 'in ' : 'en ' ) . $nom;
 }
 
 /**
@@ -198,16 +222,16 @@ function rec_consequences( array $pays, array $ville, string $langue ): array {
 			)[ $langue ];
 		} elseif ( abs( $dec ) <= 3 ) {
 			$out[] = sprintf( array(
-				'en' => 'At %+d hours from Western Europe, a single shift still overlaps most of a European working day.',
-				'fr' => 'À %+d heures de l’Europe de l’Ouest, une seule équipe recouvre encore l’essentiel d’une journée européenne.',
-				'es' => 'A %+d horas de Europa occidental, un solo turno todavía solapa la mayor parte de la jornada europea.',
-			)[ $langue ], $dec );
+				'en' => 'At %s from Western Europe, a single shift still overlaps most of a European working day.',
+				'fr' => 'À %s de l’Europe de l’Ouest, une seule équipe recouvre encore l’essentiel d’une journée européenne.',
+				'es' => 'A %s de Europa occidental, un solo turno todavía solapa la mayor parte de la jornada europea.',
+			)[ $langue ], rec_heures( $dec, $langue ) );
 		} else {
 			$out[] = sprintf( array(
-				'en' => 'At %+d hours from Western Europe, this is a night-shift or follow-the-sun location rather than a same-hours one.',
-				'fr' => 'À %+d heures de l’Europe de l’Ouest, c’est un site de nuit ou de relais horaire plutôt qu’un site en horaires alignés.',
-				'es' => 'A %+d horas de Europa occidental, es una ubicación de turno de noche o de relevo horario, no de horario alineado.',
-			)[ $langue ], $dec );
+				'en' => 'At %s from Western Europe, this is a night-shift or follow-the-sun location rather than a same-hours one.',
+				'fr' => 'À %s de l’Europe de l’Ouest, c’est un site de nuit ou de relais horaire plutôt qu’un site en horaires alignés.',
+				'es' => 'A %s de Europa occidental, es una ubicación de turno de noche o de relevo horario, no de horario alineado.',
+			)[ $langue ], rec_heures( $dec, $langue ) );
 		}
 	}
 
@@ -262,7 +286,7 @@ function rec_questions( array $pays, array $ville, string $langue ): array {
 			'fr' => '%s compte %s habitants et occupe le rang %d parmi les villes couvertes %s. Cela la place dans la catégorie « %s » que nous utilisons pour dimensionner une campagne.',
 			'es' => '%s tiene %s habitantes y ocupa el puesto %d entre las ciudades que cubrimos %s. Eso la sitúa en la banda «%s» que usamos para dimensionar una campaña.',
 		)[ $langue ], $vn, rec_nombre( $pop, $langue ), (int) $ville['rang_pays'],
-			rec_de_pays( $pays['nom'], $langue ), rec_tranche_nom( $tr, $langue ) ),
+			rec_de_pays( $pays, $langue ), rec_tranche_nom( $tr, $langue ) ),
 	);
 
 	$dec = rec_decalage( (string) ( $ville['fuseau'] ?? '' ) );
@@ -274,10 +298,10 @@ function rec_questions( array $pays, array $ville, string $langue ): array {
 				'es' => '¿Puede un equipo en %s cubrir el horario europeo?',
 			)[ $langue ], $vn ),
 			'r' => sprintf( array(
-				'en' => 'The city is on %s, %+d hours from Western Europe. %s',
-				'fr' => 'La ville est sur %s, soit %+d heures par rapport à l’Europe de l’Ouest. %s',
-				'es' => 'La ciudad está en %s, %+d horas respecto a Europa occidental. %s',
-			)[ $langue ], $ville['fuseau'], $dec,
+				'en' => 'The city is on %s, %s from Western Europe. %s',
+				'fr' => 'La ville est sur %s, soit %s par rapport à l’Europe de l’Ouest. %s',
+				'es' => 'La ciudad está en %s, %s respecto a Europa occidental. %s',
+			)[ $langue ], $ville['fuseau'], rec_heures( $dec, $langue ),
 				abs( $dec ) <= 3
 					? array( 'en' => 'A single day shift covers most of it.',
 						'fr' => 'Une seule équipe de jour en couvre l’essentiel.',
@@ -301,7 +325,7 @@ function rec_questions( array $pays, array $ville, string $langue ): array {
 				'en' => 'The dataset records %s for %s. Anything beyond that is a sourcing constraint we size before committing to a volume.',
 				'fr' => 'Le jeu de données enregistre %s pour %s. Au-delà, c’est une contrainte de sourcing que nous chiffrons avant de nous engager sur un volume.',
 				'es' => 'El conjunto de datos registra %s para %s. Más allá, es una restricción de búsqueda que dimensionamos antes de comprometer un volumen.',
-			)[ $langue ], strtoupper( implode( ', ', $langues ) ), $pays['nom'] ),
+			)[ $langue ], strtoupper( implode( ', ', $langues ) ), rec_nom_pays( $pays, $langue ) ),
 		);
 	}
 
@@ -341,16 +365,16 @@ function rec_texte_service( string $service, array $pays, array $ville, string $
 
 	if ( 'call-center' === $service ) {
 		$base = sprintf( array(
-			'en' => 'Call-center and BPO hiring in %s is decided by three things: the languages available locally, the shift pattern the time zone allows, and retention. ',
-			'fr' => 'Le recrutement en centre d’appels et BPO à %s se joue sur trois choses : les langues disponibles sur place, le rythme d’équipes que permet le fuseau horaire, et la rétention. ',
-			'es' => 'La contratación de call center y BPO en %s se decide por tres cosas: los idiomas disponibles, el patrón de turnos que permite la zona horaria y la retención. ',
+			'en' => 'Outsourcing a call-center or BPO team to %s is decided by three things: the languages available locally, the shift pattern the time zone allows, and retention. ',
+			'fr' => 'Externaliser une équipe de centre d’appels ou BPO à %s se joue sur trois choses : les langues disponibles sur place, le rythme d’équipes que permet le fuseau horaire, et la rétention. ',
+			'es' => 'Externalizar un equipo de call center o BPO en %s se decide por tres cosas: los idiomas disponibles, el patrón de turnos que permite la zona horaria y la retención. ',
 		)[ $langue ], $vn );
 		if ( null !== $dec ) {
 			$base .= sprintf( array(
-				'en' => 'At %+d hours from Western Europe, %s',
-				'fr' => 'À %+d heures de l’Europe de l’Ouest, %s',
-				'es' => 'A %+d horas de Europa occidental, %s',
-			)[ $langue ], $dec, abs( $dec ) <= 3
+				'en' => 'At %s from Western Europe, %s',
+				'fr' => 'À %s de l’Europe de l’Ouest, %s',
+				'es' => 'A %s de Europa occidental, %s',
+			)[ $langue ], rec_heures( $dec, $langue ), abs( $dec ) <= 3
 				? array( 'en' => 'one day shift already covers the client day.',
 					'fr' => 'une équipe de jour couvre déjà la journée du client.',
 					'es' => 'un turno de día ya cubre la jornada del cliente.' )[ $langue ]
@@ -363,15 +387,15 @@ function rec_texte_service( string $service, array $pays, array $ville, string $
 
 	if ( 'bulk-hiring' === $service ) {
 		return sprintf( array(
-			'en' => 'Bulk hiring in %s is a throughput problem, not a search problem. The question is how many qualified candidates this market can put in front of you per week, and for a %s market that number sets the deadline — not the other way round.',
-			'fr' => 'Le recrutement en volume à %s est un problème de débit, pas de recherche. La question est le nombre de candidats qualifiés que ce marché peut présenter par semaine ; sur un marché %s, c’est ce nombre qui fixe l’échéance, pas l’inverse.',
-			'es' => 'La contratación masiva en %s es un problema de caudal, no de búsqueda. La pregunta es cuántos candidatos cualificados puede presentar este mercado por semana; en un mercado %s, esa cifra fija el plazo, y no al revés.',
+			'en' => 'Outsourced high-volume hiring in %s is a throughput problem, not a search problem. The question is how many qualified candidates this market can put in front of you per week, and for a %s market that number sets the deadline — not the other way round.',
+			'fr' => 'Le recrutement en volume externalisé à %s est un problème de débit, pas de recherche. La question est le nombre de candidats qualifiés que ce marché peut présenter par semaine ; sur un marché %s, c’est ce nombre qui fixe l’échéance, pas l’inverse.',
+			'es' => 'La contratación masiva externalizada en %s es un problema de caudal, no de búsqueda. La pregunta es cuántos candidatos cualificados puede presentar este mercado por semana; en un mercado %s, esa cifra fija el plazo, y no al revés.',
 		)[ $langue ], $vn, rec_tranche_nom( $tr, $langue ) );
 	}
 
 	return sprintf( array(
-		'en' => 'Corporate hiring in %s means a small number of decisions that each matter. In a %s market the shortlist is built by direct approach rather than by advertising, because the people worth hiring are already employed.',
-		'fr' => 'Le recrutement de cadres à %s, c’est un petit nombre de décisions qui comptent chacune. Sur un marché %s, la liste courte se construit par approche directe plutôt que par annonce : les personnes qui valent la peine sont déjà en poste.',
-		'es' => 'La selección corporativa en %s son pocas decisiones, y todas importan. En un mercado %s, la lista corta se construye por aproximación directa y no por anuncio, porque quien merece la pena ya está empleado.',
+		'en' => 'Outsourced corporate hiring in %s means a small number of decisions that each matter, which is why the decision stays with you and only the process moves. In a %s market the shortlist is built by direct approach rather than by advertising, because the people worth hiring are already employed.',
+		'fr' => 'Le recrutement de cadres externalisé à %s, c’est un petit nombre de décisions qui comptent chacune : la décision reste chez vous, seul le processus se délègue. Sur un marché %s, la liste courte se construit par approche directe plutôt que par annonce — les personnes qui valent la peine sont déjà en poste.',
+		'es' => 'La selección corporativa externalizada en %s son pocas decisiones, y todas importan: la decisión sigue siendo suya y solo se delega el proceso. En un mercado %s, la lista corta se construye por aproximación directa y no por anuncio, porque quien merece la pena ya está empleado.',
 	)[ $langue ], $vn, rec_tranche_nom( $tr, $langue ) );
 }

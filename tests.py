@@ -59,11 +59,11 @@ with sync_playwright() as p:
 
     pages = [
         '/en/', '/fr/', '/es/',
-        '/en/recruitment/canada/',
-        '/en/recruitment/canada/toronto/',
-        '/fr/recruitment/canada/toronto/',
-        '/en/recruitment/canada/toronto/call-center/',
-        '/es/recruitment/morocco/casablanca/',
+        '/en/recruitment-outsourcing/canada/',
+        '/en/recruitment-outsourcing/canada/toronto/',
+        '/fr/externalisation-recrutement/canada/toronto/',
+        '/en/recruitment-outsourcing/canada/toronto/call-center/',
+        '/es/externalizacion-reclutamiento/morocco/casablanca/',
     ]
     titres = {}
     for u in pages:
@@ -95,19 +95,19 @@ with sync_playwright() as p:
 
     print('\n-- 2. hreflang reciproque --')
     # Aller en francais depuis l'anglais, puis revenir : la boucle doit fermer.
-    pg.goto(BASE + '/en/recruitment/canada/toronto/', wait_until='domcontentloaded')
+    pg.goto(BASE + '/en/recruitment-outsourcing/canada/toronto/', wait_until='domcontentloaded')
     vers_fr = [a.get_attribute('href') for a in pg.locator('link[rel=alternate]').all()
                if a.get_attribute('hreflang') == 'fr'][0]
     pg.goto(vers_fr, wait_until='domcontentloaded')
     retour_en = [a.get_attribute('href') for a in pg.locator('link[rel=alternate]').all()
                  if a.get_attribute('hreflang') == 'en'][0]
     t('en -> fr -> en revient a la page de depart',
-      retour_en == BASE + '/en/recruitment/canada/toronto/', retour_en)
+      retour_en == BASE + '/en/recruitment-outsourcing/canada/toronto/', retour_en)
     t('la page francaise est bien en francais',
       pg.locator('html').get_attribute('lang') == 'fr')
 
     print('\n-- 3. donnees structurees --')
-    pg.goto(BASE + '/en/recruitment/canada/toronto/', wait_until='domcontentloaded')
+    pg.goto(BASE + '/en/recruitment-outsourcing/canada/toronto/', wait_until='domcontentloaded')
     blocs = [json.loads(x) for x in pg.locator('script[type="application/ld+json"]')
              .all_text_contents()]
     types = [b.get('@type') for b in blocs]
@@ -122,7 +122,7 @@ with sync_playwright() as p:
 
     print('\n-- 4. la porte de qualite --')
     # Une ville minuscule : le jeu de donnees en a dans les petits territoires.
-    pg.goto(BASE + '/en/recruitment/canada/toronto/', wait_until='domcontentloaded')
+    pg.goto(BASE + '/en/recruitment-outsourcing/canada/toronto/', wait_until='domcontentloaded')
     t('une grande ville n\'est pas en noindex',
       pg.locator('meta[name=robots]').count() == 0)
 
@@ -164,12 +164,12 @@ with sync_playwright() as p:
 
     print('\n-- 5. l\'unicite du contenu --')
     echantillon = [
-        '/en/recruitment/canada/toronto/',
-        '/en/recruitment/canada/calgary/',
-        '/en/recruitment/france/paris/',
-        '/en/recruitment/france/nantes/',
-        '/en/recruitment/morocco/casablanca/',
-        '/en/recruitment/japan/tokyo/',
+        '/en/recruitment-outsourcing/canada/toronto/',
+        '/en/recruitment-outsourcing/canada/calgary/',
+        '/en/recruitment-outsourcing/france/paris/',
+        '/en/recruitment-outsourcing/france/nantes/',
+        '/en/recruitment-outsourcing/morocco/casablanca/',
+        '/en/recruitment-outsourcing/japan/tokyo/',
     ]
     textes = {}
     for u in echantillon:
@@ -189,12 +189,78 @@ with sync_playwright() as p:
     t('deux villes ne produisent pas la meme page (max %.0f %%)' % (pire * 100),
       pire < 0.85, '%s vs %s' % couple if couple else '')
 
+    print('\n-- 5b. le segment d\'adresse est dans la langue de la page --')
+    # Le positionnement corrige par le client — externalisation, et non
+    # recrutement — porte sur le mot le plus recherche de toute l'adresse. Il
+    # doit donc etre traduit, ET les anciennes adresses ne doivent pas mourir.
+    req = pg.context.request
+
+    for u, attendu in (
+        ('/en/recruitment-outsourcing/canada/toronto/', 'en'),
+        ('/fr/externalisation-recrutement/canada/toronto/', 'fr'),
+        ('/es/externalizacion-reclutamiento/canada/toronto/', 'es'),
+    ):
+        rr = req.get(BASE + u, max_redirects=0)
+        t('%s repond 200 directement' % u, rr.status == 200, rr.status)
+
+    for u, cible in (
+        # L'ancien segment, celui d'avant la correction.
+        ('/en/recruitment/canada/toronto/', '/en/recruitment-outsourcing/canada/toronto/'),
+        ('/fr/recruitment/canada/toronto/', '/fr/externalisation-recrutement/canada/toronto/'),
+        # Le segment d'une AUTRE langue : un lien mal recopie ne doit pas
+        # produire un 404 alors que la page existe.
+        ('/es/externalisation-recrutement/canada/toronto/',
+         '/es/externalizacion-reclutamiento/canada/toronto/'),
+    ):
+        rr = req.get(BASE + u, max_redirects=0)
+        t('%s redirige en 301' % u, rr.status == 301, rr.status)
+        t('  ... vers %s' % cible, rr.headers.get('location') == cible,
+          rr.headers.get('location'))
+
+    # Et le plan de site ne doit contenir QUE les adresses courantes.
+    plan = nav.new_page()
+    plan.goto(BASE + '/sitemap.xml', wait_until='domcontentloaded')
+    xml_seg = plan.content()
+    plan.close()
+    t('le plan de site ne contient plus l\'ancien segment',
+      '/recruitment/' not in xml_seg)
+    for seg in ('recruitment-outsourcing', 'externalisation-recrutement',
+                'externalizacion-reclutamiento'):
+        t('le plan de site publie le segment %s' % seg, seg in xml_seg)
+
+    print('\n-- 5c. les pays portent leur nom dans la langue de la page --')
+    # « Externalizacion de la seleccion en Morocco » disqualifie une page
+    # espagnole a la premiere ligne. Le nom vient de la norme ISO 3166, et
+    # l'article francais — au / en / aux / a — est calcule puis relu a la main.
+    for u, attendus, interdits in (
+        ('/fr/externalisation-recrutement/morocco/casablanca/', ['Maroc'], ['Morocco']),
+        ('/es/externalizacion-reclutamiento/japan/', ['Japón'], ['>Japan<']),
+        ('/fr/externalisation-recrutement/the-netherlands/', ['aux Pays-Bas'], ['Netherlands<']),
+        ('/fr/externalisation-recrutement/canada/', ['au Canada'], ['en Canada']),
+        ('/fr/externalisation-recrutement/united-states/', ['aux États-Unis'], ['au États']),
+        ('/fr/externalisation-recrutement/ivory-coast/', ['en Côte d’Ivoire'], ['Ivory Coast<']),
+    ):
+        pg.goto(BASE + u, wait_until='domcontentloaded')
+        html = pg.content()
+        for a in attendus:
+            t('%s contient « %s »' % (u, a), a in html)
+        for i in interdits:
+            t('%s ne contient PAS « %s »' % (u, i), i not in html)
+
+    # Le bloc « d'ou viennent ces chiffres » est affiche : il se traduit aussi.
+    pg.goto(BASE + '/es/externalizacion-reclutamiento/morocco/casablanca/',
+            wait_until='domcontentloaded')
+    criteres = pg.locator('.criteres li').all_text_contents()
+    t('les criteres de qualite sont traduits (%d)' % len(criteres),
+      criteres and not any('Population figure' in c or 'Time zone known' in c
+                           for c in criteres), criteres[:2])
+
     print('\n-- 6. codes HTTP et plan de site --')
-    r = pg.goto(BASE + '/en/recruitment/atlantis/', wait_until='domcontentloaded')
+    r = pg.goto(BASE + '/en/recruitment-outsourcing/atlantis/', wait_until='domcontentloaded')
     t('un pays inconnu repond 404', r.status == 404, r.status)
-    r = pg.goto(BASE + '/en/recruitment/canada/atlantis/', wait_until='domcontentloaded')
+    r = pg.goto(BASE + '/en/recruitment-outsourcing/canada/atlantis/', wait_until='domcontentloaded')
     t('une ville inconnue repond 404', r.status == 404, r.status)
-    r = pg.goto(BASE + '/en/recruitment/canada/toronto/plumbing/', wait_until='domcontentloaded')
+    r = pg.goto(BASE + '/en/recruitment-outsourcing/canada/toronto/plumbing/', wait_until='domcontentloaded')
     t('un metier inconnu repond 404', r.status == 404, r.status)
 
     r = pg.goto(BASE + '/sitemap.xml', wait_until='domcontentloaded')

@@ -5,9 +5,17 @@
  * L'architecture d'adresses vient du cahier des charges, avec la langue en
  * tete parce que le site est international des le premier jour :
  *
- *   /{langue}/recruitment/{pays}/
- *   /{langue}/recruitment/{pays}/{ville}/
- *   /{langue}/recruitment/{pays}/{ville}/{service}/
+ *   /{langue}/{segment}/{pays}/
+ *   /{langue}/{segment}/{pays}/{ville}/
+ *   /{langue}/{segment}/{pays}/{ville}/{service}/
+ *
+ * LE SEGMENT EST DANS LA LANGUE DE LA PAGE. Le client a corrige le
+ * positionnement : ce n'est pas une agence de recrutement, c'est une
+ * plateforme d'EXTERNALISATION du recrutement. Le mot qui porte la requete
+ * change donc de langue en langue, et c'est le mot le plus recherche de toute
+ * l'adresse : « recruitment outsourcing », « externalisation recrutement »,
+ * « externalizacion reclutamiento ». Servir les trois sous un segment anglais
+ * revient a rendre invisibles deux versions sur trois.
  *
  * UNE SEULE FONCTION FABRIQUE LES ADRESSES. Les liens internes, les canoniques,
  * les hreflang et le plan de site passent tous par rec_url() : le jour ou la
@@ -22,6 +30,29 @@ function rec_services(): array {
 	return array( 'corporate', 'call-center', 'bulk-hiring' );
 }
 
+/** Le segment de l'adresse, dans la langue de la page. */
+function rec_segment( string $langue ): string {
+	$s = array(
+		'en' => 'recruitment-outsourcing',
+		'fr' => 'externalisation-recrutement',
+		'es' => 'externalizacion-reclutamiento',
+	);
+	return $s[ $langue ] ?? $s[ rec_langue_defaut() ];
+}
+
+/**
+ * Les segments qui ont eu cours avant. Ils ne rendent pas 404 : ils rendent
+ * une 301 vers l'adresse courante. Une adresse deja partagee qui se met a
+ * repondre 404 est une perte seche, et le cout de la garder est six lignes.
+ */
+function rec_segments_connus(): array {
+	$out = array( 'recruitment' );
+	foreach ( array_keys( rec_langues() ) as $lg ) {
+		$out[] = rec_segment( $lg );
+	}
+	return $out;
+}
+
 function rec_service_cle( string $service ): string {
 	return 'svc_' . str_replace( '-', '_', $service );
 }
@@ -33,7 +64,7 @@ function rec_url( string $langue, ?string $pays = null, ?string $ville = null,
 	if ( null === $pays ) {
 		return $p . '/';
 	}
-	$p .= '/recruitment/' . $pays . '/';
+	$p .= '/' . rec_segment( $langue ) . '/' . $pays . '/';
 	if ( null === $ville ) {
 		return $p;
 	}
@@ -56,7 +87,7 @@ function rec_base(): string {
  * Analyse le chemin demande.
  *
  * Rend toujours un tableau avec une cle « type » :
- *   racine | accueil | pays | ville | service | plan | 404
+ *   racine | redirection | accueil | pays | ville | service | plan | 404
  */
 function rec_router( string $chemin ): array {
 	$chemin = parse_url( $chemin, PHP_URL_PATH ) ?: '/';
@@ -80,7 +111,18 @@ function rec_router( string $chemin ): array {
 		return array( 'type' => 'accueil', 'langue' => $langue );
 	}
 
-	if ( 'recruitment' !== $bouts[1] ) {
+	if ( rec_segment( $langue ) !== $bouts[1] ) {
+		// Un segment qui a eu cours, ou celui d'une autre langue : on ne perd
+		// pas le visiteur, on le renvoie une fois pour toutes a la bonne
+		// adresse. Tout le reste du chemin est conserve tel quel.
+		if ( in_array( $bouts[1], rec_segments_connus(), true ) ) {
+			$bouts[1] = rec_segment( $langue );
+			return array(
+				'type'   => 'redirection',
+				'langue' => $langue,
+				'vers'   => '/' . implode( '/', $bouts ) . '/',
+			);
+		}
 		return array( 'type' => '404', 'langue' => $langue );
 	}
 	if ( 2 === count( $bouts ) ) {

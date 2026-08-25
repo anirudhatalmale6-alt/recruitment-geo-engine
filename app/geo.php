@@ -43,11 +43,57 @@ function rec_geo(): array {
 	return $g;
 }
 
-/** Tous les pays classes, tries par nom. */
-function rec_pays_tous(): array {
+/**
+ * Les noms de pays dans les trois langues, produits par geo/noms.py depuis la
+ * norme ISO 3166-1. Le fichier porte aussi la forme « dans le pays » avec son
+ * article : « in the Netherlands », « aux Pays-Bas », « en Pays Bajos ».
+ * L'article francais ne se devine pas, il est calcule une fois et relu.
+ */
+function rec_noms_pays(): array {
+	static $n = null;
+	if ( null === $n ) {
+		$f = rec_data_dir() . '/noms-pays.json';
+		$n = is_readable( $f ) ? json_decode( (string) file_get_contents( $f ), true ) : null;
+		if ( ! is_array( $n ) ) {
+			$n = array();
+		}
+	}
+	return $n;
+}
+
+/**
+ * Le nom d'un pays dans la langue de la page.
+ *
+ * ATTENTION : ceci ne touche PAS a la limace d'URL. L'adresse reste
+ * /fr/externalisation-recrutement/morocco/ et non /maroc/ : traduire la limace
+ * changerait trois mille adresses et casserait tous les liens deja poses,
+ * pour un gain de referencement qui n'existe pas — c'est le titre et le
+ * contenu que le moteur lit, pas le mot dans le chemin.
+ */
+function rec_nom_pays( array $pays, string $langue ): string {
+	$iso = (string) ( $pays['iso'] ?? '' );
+	$n   = rec_noms_pays();
+	return $n[ $iso ]['noms'][ $langue ] ?? (string) $pays['nom'];
+}
+
+/** Tous les pays classes, tries par leur nom dans la langue de la page. */
+function rec_pays_tous( string $langue = 'en' ): array {
 	$c = rec_classement();
 	$p = $c['pays'];
-	uasort( $p, function ( $a, $b ) { return strcmp( $a['nom'], $b['nom'] ); } );
+	foreach ( $p as $iso => $x ) {
+		$p[ $iso ]['iso'] = $iso;
+	}
+	uasort( $p, function ( $a, $b ) use ( $langue ) {
+		// Tri sur le nom AFFICHE : une liste espagnole rangee dans l'ordre
+		// alphabetique anglais se lit comme une liste non triee. Les accents
+		// sont replies avant comparaison, sinon « Égypte » finit apres « Zambie ».
+		$cle = function ( $x ) use ( $langue ) {
+			$n = rec_nom_pays( $x, $langue );
+			$t = @iconv( 'UTF-8', 'ASCII//TRANSLIT', $n );
+			return strtolower( false === $t ? $n : $t );
+		};
+		return strcmp( $cle( $a ), $cle( $b ) );
+	} );
 	return $p;
 }
 
@@ -114,32 +160,38 @@ function rec_voisines( array $pays, string $limace, int $combien = 6 ): array {
  * La porte est donc CALCULEE PAR PAGE et son verdict est visible, pas cache.
  */
 
-/** Les criteres de qualite d'une page ville, avec leur verdict. */
-function rec_qualite( array $pays, array $ville, ?array $detail ): array {
+/**
+ * Les criteres de qualite d'une page ville, avec leur verdict.
+ *
+ * Les libelles sont TRADUITS : ce bloc est affiche au lecteur, et six lignes
+ * d'anglais au bas d'une page espagnole disent au visiteur que le reste de la
+ * traduction est probablement du meme niveau.
+ */
+function rec_qualite( array $pays, array $ville, ?array $detail, string $langue = 'en' ): array {
 	$criteres = array();
 
 	$criteres['population'] = array(
-		'libelle' => 'Population figure for the city',
+		'libelle' => rec_t( 'q_population', $langue ),
 		'ok'      => ! empty( $ville['population'] ),
 	);
 	$criteres['region'] = array(
-		'libelle' => 'Administrative region known (used to rank within the region)',
+		'libelle' => rec_t( 'q_region', $langue ),
 		'ok'      => '' !== (string) ( $ville['region_code'] ?? '' ),
 	);
 	$criteres['fuseau'] = array(
-		'libelle' => 'Time zone known (working hours, shift cover)',
+		'libelle' => rec_t( 'q_fuseau', $langue ),
 		'ok'      => '' !== (string) ( $ville['fuseau'] ?? '' ),
 	);
 	$criteres['langues'] = array(
-		'libelle' => 'Official languages of the country known',
+		'libelle' => rec_t( 'q_langues', $langue ),
 		'ok'      => ! empty( $pays['langues'] ),
 	);
 	$criteres['voisines'] = array(
-		'libelle' => 'At least three other ranked cities to link to',
+		'libelle' => rec_t( 'q_voisines', $langue ),
 		'ok'      => count( $pays['villes'] ) >= 4,
 	);
 	$criteres['taille'] = array(
-		'libelle' => 'City large enough to describe a labour market (25 000+)',
+		'libelle' => rec_t( 'q_taille', $langue ),
 		'ok'      => (int) ( $ville['population'] ?? 0 ) >= 25000,
 	);
 

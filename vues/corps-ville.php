@@ -19,7 +19,7 @@ $pop = (int) $v['population'];
     <nav class="fil" aria-label="Breadcrumb">
       <a href="<?php echo rec_url( $l ); ?>"><?php echo rec_t( 'accueil', $l ); ?></a>
       <span>·</span>
-      <a href="<?php echo rec_url( $l, $p['limace'] ); ?>"><?php echo htmlspecialchars( $p['nom'] ); ?></a>
+      <a href="<?php echo rec_url( $l, $p['limace'] ); ?>"><?php echo htmlspecialchars( rec_nom_pays( $p, $l ) ); ?></a>
     </nav>
     <h1><?php echo htmlspecialchars( sprintf( rec_t( 'h1_ville', $l ), $v['nom'] ) ); ?></h1>
     <p class="chapo"><?php echo htmlspecialchars( rec_chapo( $p, $v, $l ) ); ?></p>
@@ -32,7 +32,7 @@ $pop = (int) $v['population'];
     <dl class="faits">
       <div><dt><?php echo rec_t( 'f_population', $l ); ?></dt>
         <dd><?php echo rec_nombre( $pop, $l ); ?></dd></div>
-      <div><dt><?php echo htmlspecialchars( sprintf( rec_t( 'f_rang', $l ), $p['nom'] ) ); ?></dt>
+      <div><dt><?php echo htmlspecialchars( sprintf( rec_t( 'f_rang', $l ), rec_de_pays( $p, $l ) ) ); ?></dt>
         <dd><?php echo (int) $v['rang_pays']; ?></dd></div>
       <?php
       // PAS DE LIGNE « Region » ICI. Le jeu de donnees ne fournit qu'un code
@@ -100,7 +100,7 @@ $pop = (int) $v['population'];
 <?php $voisines = rec_voisines( $p, $v['limace'], 8 ); if ( $voisines ) : ?>
 <section class="bloc">
   <div class="wrap">
-    <h2><?php echo htmlspecialchars( sprintf( rec_t( 'villes_proches', $l ), $p['nom'] ) ); ?></h2>
+    <h2><?php echo htmlspecialchars( sprintf( rec_t( 'villes_proches', $l ), rec_de_pays( $p, $l ) ) ); ?></h2>
     <ul class="puces">
       <?php foreach ( $voisines as $o ) : ?>
         <li><a href="<?php echo rec_url( $l, $p['limace'], $o['limace'] ); ?>">
@@ -108,7 +108,7 @@ $pop = (int) $v['population'];
       <?php endforeach; ?>
     </ul>
     <p><a class="lien-retour" href="<?php echo rec_url( $l, $p['limace'] ); ?>">
-      <?php echo htmlspecialchars( sprintf( rec_t( 'retour_pays', $l ), $p['nom'] ) ); ?></a></p>
+      <?php echo htmlspecialchars( sprintf( rec_t( 'retour_pays', $l ), rec_de_pays( $p, $l ) ) ); ?></a></p>
   </div>
 </section>
 <?php endif; ?>

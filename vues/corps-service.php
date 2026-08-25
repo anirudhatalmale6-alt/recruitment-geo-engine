@@ -9,7 +9,7 @@ $svc = $r['service'];
     <nav class="fil" aria-label="Breadcrumb">
       <a href="<?php echo rec_url( $l ); ?>"><?php echo rec_t( 'accueil', $l ); ?></a>
       <span>·</span>
-      <a href="<?php echo rec_url( $l, $p['limace'] ); ?>"><?php echo htmlspecialchars( $p['nom'] ); ?></a>
+      <a href="<?php echo rec_url( $l, $p['limace'] ); ?>"><?php echo htmlspecialchars( rec_nom_pays( $p, $l ) ); ?></a>
       <span>·</span>
       <a href="<?php echo rec_url( $l, $p['limace'], $v['limace'] ); ?>"><?php echo htmlspecialchars( $v['nom'] ); ?></a>
     </nav>

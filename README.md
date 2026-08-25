@@ -1,14 +1,30 @@
-# Global Recruitment Platform — geographic SEO engine
+# Global Recruitment Outsourcing Platform — geographic SEO engine
 
-Corporate, call-center/BPO and bulk hiring. International programmatic SEO,
-built from a real geographic dataset rather than a page template with the city
-name swapped in.
+Recruitment **outsourcing**: corporate RPO, call-center/BPO staffing and
+high-volume campaigns. International programmatic SEO, built from a real
+geographic dataset rather than a page template with the city name swapped in.
+
+The client corrected the positioning after the first build — outsourcing, not
+recruitment. That word is the most-searched term in the whole URL, so it is
+translated per language rather than carried in English everywhere:
+
+| Language | URL |
+|---|---|
+| English  | `/en/recruitment-outsourcing/canada/toronto/` |
+| French   | `/fr/externalisation-recrutement/canada/toronto/` |
+| Spanish  | `/es/externalizacion-reclutamiento/canada/toronto/` |
+
+Old and cross-language segments return **301**, not 404, so any link already
+shared keeps working. Country *slugs* stay English on purpose: translating them
+would change 3,119 addresses for no ranking gain, since the engine reads the
+title and the body, not the word in the path.
 
 ## What is here
 
 ```
 geo/construire.py     builds data/geo.json from the open GeoNames dataset
 geo/score.py          the Top-19 CityScore ranking, versioned
+geo/noms.py           country names in 3 languages + the French article
 app/geo.php           data access + THE QUALITY GATE
 app/contenu.php       the editorial modules — every sentence derived from data
 app/langues.php       the three hand-written languages
@@ -17,7 +33,7 @@ app/seo.php           titles, canonicals, hreflang, structured data
 app/plan.php          the sitemap — indexable pages only
 public/index.php      front controller
 vues/                 templates
-tests.py              59 checks in a real browser
+tests.py              85 checks in a real browser
 ```
 
 ## The numbers, measured
@@ -53,9 +69,34 @@ Every ranking revision is stamped with a hash of the weights and manual
 overrides, and that stamp is printed on every page. Two rankings cannot be
 mistaken for each other.
 
+## Languages
+
+Three, hand-written: English, French, Spanish. Nothing is machine-translated —
+a hreflang tag pointing at a translation that does not exist is an indexing
+error, not a feature.
+
+Country names come from **ISO 3166-1** (via `pycountry`, offline), not from the
+geographic dataset, which only knows English. The hard part is not the name, it
+is the article:
+
+* English — `in Morocco`, but `in **the** Netherlands`.
+* Spanish — `en` everywhere; dropping the article is correct. Nothing to do.
+* French — `au Maroc`, `en France`, `aux Pays-Bas`, `à Cuba`. Four forms, and
+  the choice depends on gender, number and first letter — **none of which is in
+  the dataset**.
+
+`geo/noms.py` applies the rule plus three hand-written exception lists, then
+**prints all 243 results grouped by article** so a human can read them. That
+review is what caught `au Guinée-Bissau`, `au République du Congo` and
+`aux Bonaire` — all produced by the rule, none by the data. Eighteen countries
+whose ISO name is unusable as a heading (`Corée, République de`) are named by
+hand.
+
 ## The quality gate
 
-Six data checks per city page. Five must pass to be indexed.
+Six data checks per city page. Five must pass to be indexed. The six labels
+are translated too — six lines of English at the foot of a Spanish page tell the
+visitor what the rest of the translation is probably worth.
 
 A page that fails carries `noindex,follow`, tells the reader so, and is
 **excluded from the sitemap** — using the same function, not a second copy of
@@ -65,9 +106,10 @@ contradictory orders, and the wasteful one wins.
 ## Running it
 
 ```bash
-pip install geonamescache
+pip install geonamescache pycountry
 python3 geo/construire.py            # -> data/geo.json
 python3 geo/score.py                 # -> data/classement.json
+python3 geo/noms.py                  # -> data/noms-pays.json, prints the review
 php -S 127.0.0.1:8850 -t public public/router.php
 python3 tests.py
 ```

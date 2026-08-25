@@ -33,6 +33,13 @@ if ( 'racine' === $r['type'] ) {
 	exit;
 }
 
+if ( 'redirection' === $r['type'] ) {
+	// 301, pas 302 : l'ancienne adresse ne reviendra pas, et une redirection
+	// temporaire laisse les deux dans l'index au lieu d'en fusionner une.
+	header( 'Location: ' . $r['vers'], true, 301 );
+	exit;
+}
+
 if ( 'plan' === $r['type'] ) {
 	require dirname( __DIR__ ) . '/app/plan.php';
 	exit;
@@ -50,7 +57,7 @@ if ( '404' === $r['type'] ) {
 $qualite = null;
 if ( in_array( $r['type'], array( 'ville', 'service' ), true ) ) {
 	$detail  = rec_ville_detail( $r['pays']['iso'], $r['ville']['limace'] );
-	$qualite = rec_qualite( $r['pays'], $r['ville'], $detail );
+	$qualite = rec_qualite( $r['pays'], $r['ville'], $detail, $r['langue'] );
 }
 
 require dirname( __DIR__ ) . '/vues/page.php';

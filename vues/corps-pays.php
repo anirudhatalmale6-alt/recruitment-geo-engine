@@ -7,10 +7,10 @@ $p = $r['pays'];
     <nav class="fil" aria-label="Breadcrumb">
       <a href="<?php echo rec_url( $l ); ?>"><?php echo rec_t( 'accueil', $l ); ?></a>
     </nav>
-    <h1><?php echo htmlspecialchars( sprintf( rec_t( 'h1_pays', $l ), $p['nom'] ) ); ?></h1>
+    <h1><?php echo htmlspecialchars( sprintf( rec_t( 'h1_pays', $l ), rec_de_pays( $p, $l ) ) ); ?></h1>
     <p class="chapo"><?php
       echo htmlspecialchars( sprintf( rec_t( 'villes_du_pays', $l ),
-        count( $p['villes'] ), rec_de_pays( $p['nom'], $l ) ) );
+        count( $p['villes'] ), rec_de_pays( $p, $l ) ) );
       if ( ! $p['complet'] ) {
         // On le DIT quand le pays n'atteint pas le Top-19. Afficher « Top 19 »
         // au-dessus de onze villes est un mensonge que le lecteur compte.

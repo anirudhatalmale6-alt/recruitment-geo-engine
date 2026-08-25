@@ -44,47 +44,54 @@ function rec_chaines(): array {
 		'nav_services'      => array( 'en' => 'Services', 'fr' => 'Services', 'es' => 'Servicios' ),
 		'nav_employeurs'    => array( 'en' => 'For employers', 'fr' => 'Employeurs', 'es' => 'Empresas' ),
 
-		'svc_corporate'     => array( 'en' => 'Corporate recruitment', 'fr' => 'Recrutement cadres', 'es' => 'Selección corporativa' ),
-		'svc_call_center'   => array( 'en' => 'Call center &amp; BPO', 'fr' => 'Centres d’appels &amp; BPO', 'es' => 'Call center y BPO' ),
-		'svc_bulk_hiring'   => array( 'en' => 'Bulk hiring', 'fr' => 'Recrutement en volume', 'es' => 'Contratación masiva' ),
+		'svc_corporate'     => array( 'en' => 'Corporate recruitment outsourcing', 'fr' => 'Externalisation du recrutement cadres', 'es' => 'Externalización de la selección corporativa' ),
+		'svc_call_center'   => array( 'en' => 'Call center &amp; BPO outsourcing', 'fr' => 'Externalisation centres d’appels &amp; BPO', 'es' => 'Externalización de call center y BPO' ),
+		'svc_bulk_hiring'   => array( 'en' => 'High-volume hiring outsourcing', 'fr' => 'Externalisation du recrutement en volume', 'es' => 'Externalización de la contratación masiva' ),
 
+		// LE VERBE DE CHAQUE DESCRIPTION EST « NOUS OPERONS », PAS « NOUS
+		// TROUVONS ». C'est la difference entre une agence, qui livre des
+		// candidats, et une plateforme d'externalisation, qui tient le
+		// processus. Le client a corrige exactement ce point.
 		'svc_corporate_d'   => array(
-			'en' => 'Executives, managers and specialists. Search, assessment and offer management.',
-			'fr' => 'Cadres, managers et specialistes. Approche directe, evaluation et gestion des offres.',
-			'es' => 'Directivos, mandos y especialistas. Búsqueda, evaluación y gestión de ofertas.',
+			'en' => 'RPO for executives, managers and specialists: we run the sourcing, the assessment and the offer stage, you keep the hiring decision.',
+			'fr' => 'RPO pour cadres, managers et spécialistes : nous tenons l’approche directe, l’évaluation et la phase d’offre ; la décision d’embauche reste chez vous.',
+			'es' => 'RPO para directivos, mandos y especialistas: operamos la búsqueda, la evaluación y la fase de oferta; la decisión de contratar sigue siendo suya.',
 		),
 		'svc_call_center_d' => array(
-			'en' => 'Customer service, telesales and support. Language, schedule and retention are the constraints.',
-			'fr' => 'Service client, televente et support. La langue, les horaires et la retention sont les contraintes.',
-			'es' => 'Atención al cliente, televenta y soporte. Idioma, turnos y retención son las limitaciones.',
+			'en' => 'A customer service, telesales or support team recruited and staffed for you. Language, shift pattern and retention are the constraints, and they are local.',
+			'fr' => 'Une équipe service client, télévente ou support recrutée et tenue pour vous. La langue, le rythme d’équipes et la rétention sont les contraintes, et elles sont locales.',
+			'es' => 'Un equipo de atención al cliente, televenta o soporte reclutado y gestionado para usted. Idioma, turnos y retención son las restricciones, y son locales.',
 		),
 		'svc_bulk_hiring_d' => array(
-			'en' => 'Fifty to several thousand hires on a fixed deadline, with an industrialised pipeline.',
-			'fr' => 'De cinquante a plusieurs milliers d’embauches a date fixe, avec un processus industrialise.',
-			'es' => 'De cincuenta a varios miles de contrataciones con fecha fija y un proceso industrializado.',
+			'en' => 'Fifty to several thousand hires on a fixed deadline. The pipeline, the recruiters and the weekly reporting sit on our side.',
+			'fr' => 'De cinquante à plusieurs milliers d’embauches à date fixe. Le processus, les recruteurs et le reporting hebdomadaire sont chez nous.',
+			'es' => 'De cincuenta a varios miles de contrataciones con fecha fija. El proceso, los reclutadores y el informe semanal están de nuestro lado.',
 		),
 
-		'h1_pays'           => array( 'en' => 'Recruitment in %s', 'fr' => 'Recrutement %s', 'es' => 'Selección de personal en %s' ),
-		'h1_ville'          => array( 'en' => 'Recruitment in %s', 'fr' => 'Recrutement à %s', 'es' => 'Selección de personal en %s' ),
+		// Le titre pays recoit la forme « dans le pays » COMPLETE, article
+		// compris — « in Canada », « au Canada », « en Canadá » — et non le nom
+		// nu. C'est geo/noms.py qui la calcule et un humain qui l'a relue.
+		'h1_pays'           => array( 'en' => 'Recruitment outsourcing %s', 'fr' => 'Externalisation du recrutement %s', 'es' => 'Externalización de la selección %s' ),
+		'h1_ville'          => array( 'en' => 'Recruitment outsourcing in %s', 'fr' => 'Externalisation du recrutement à %s', 'es' => 'Externalización de la selección en %s' ),
 		'h1_ville_svc'      => array( 'en' => '%s in %s', 'fr' => '%s à %s', 'es' => '%s en %s' ),
 
 		'villes_du_pays'    => array( 'en' => 'The %d cities we cover %s', 'fr' => 'Les %d villes couvertes %s', 'es' => 'Las %d ciudades que cubrimos %s' ),
 		'marche_local'      => array( 'en' => 'The local hiring picture', 'fr' => 'Le marché local', 'es' => 'El mercado local' ),
-		'pourquoi_ici'      => array( 'en' => 'What this means for hiring here', 'fr' => 'Ce que cela change pour recruter ici', 'es' => 'Qué implica para contratar aquí' ),
+		'pourquoi_ici'      => array( 'en' => 'What this means for outsourcing here', 'fr' => 'Ce que cela change pour externaliser ici', 'es' => 'Qué implica para externalizar aquí' ),
 		'nos_services_ici'  => array( 'en' => 'What we run in %s', 'fr' => 'Ce que nous opérons à %s', 'es' => 'Lo que operamos en %s' ),
-		'villes_proches'    => array( 'en' => 'Other cities in %s', 'fr' => 'Autres villes %s', 'es' => 'Otras ciudades de %s' ),
+		'villes_proches'    => array( 'en' => 'Other cities %s', 'fr' => 'Autres villes %s', 'es' => 'Otras ciudades %s' ),
 		'questions'         => array( 'en' => 'Questions employers ask about %s', 'fr' => 'Ce que les employeurs demandent sur %s', 'es' => 'Lo que preguntan las empresas sobre %s' ),
 
-		'cta_titre'         => array( 'en' => 'Hire in %s', 'fr' => 'Recruter à %s', 'es' => 'Contratar en %s' ),
+		'cta_titre'         => array( 'en' => 'Outsource your hiring in %s', 'fr' => 'Externaliser votre recrutement à %s', 'es' => 'Externalizar su selección en %s' ),
 		'cta_texte'         => array(
-			'en' => 'Tell us the role, the volume and the deadline. We come back with a plan and a cost, not a brochure.',
-			'fr' => 'Dites-nous le poste, le volume et l’echeance. Nous revenons avec un plan et un cout, pas une plaquette.',
-			'es' => 'Díganos el puesto, el volumen y el plazo. Respondemos con un plan y un coste, no con un folleto.',
+			'en' => 'Tell us the role, the volume and the deadline. We come back with the team we would put on it, a timeline and a cost — not a brochure.',
+			'fr' => 'Dites-nous le poste, le volume et l’échéance. Nous revenons avec l’équipe que nous y mettrions, un calendrier et un coût — pas une plaquette.',
+			'es' => 'Díganos el puesto, el volumen y el plazo. Respondemos con el equipo que asignaríamos, un calendario y un coste, no con un folleto.',
 		),
-		'cta_bouton'        => array( 'en' => 'Request a hiring plan', 'fr' => 'Demander un plan de recrutement', 'es' => 'Solicitar un plan de contratación' ),
+		'cta_bouton'        => array( 'en' => 'Request an outsourcing plan', 'fr' => 'Demander un plan d’externalisation', 'es' => 'Solicitar un plan de externalización' ),
 
 		'f_population'      => array( 'en' => 'Population', 'fr' => 'Population', 'es' => 'Población' ),
-		'f_rang'            => array( 'en' => 'Rank in %s', 'fr' => 'Rang %s', 'es' => 'Puesto en %s' ),
+		'f_rang'            => array( 'en' => 'Rank %s', 'fr' => 'Rang %s', 'es' => 'Puesto %s' ),
 		'f_region'          => array( 'en' => 'Region', 'fr' => 'Région', 'es' => 'Región' ),
 		'f_fuseau'          => array( 'en' => 'Time zone', 'fr' => 'Fuseau horaire', 'es' => 'Zona horaria' ),
 		'f_langues'         => array( 'en' => 'Working languages', 'fr' => 'Langues de travail', 'es' => 'Idiomas de trabajo' ),
@@ -102,7 +109,40 @@ function rec_chaines(): array {
 			'fr' => 'Cette page n’est pas encore indexée : il lui manque des données locales.',
 			'es' => 'Esta página aún no está indexada: le faltan datos locales.',
 		),
-		'retour_pays'       => array( 'en' => 'All cities in %s', 'fr' => 'Toutes les villes %s', 'es' => 'Todas las ciudades de %s' ),
+		// Les six criteres de la porte de qualite. Ils sont AFFICHES, donc ils
+		// se traduisent comme le reste.
+		'q_population'      => array(
+			'en' => 'Population figure for the city',
+			'fr' => 'Population de la ville connue',
+			'es' => 'Cifra de población de la ciudad',
+		),
+		'q_region'          => array(
+			'en' => 'Administrative region known (used to rank within the region)',
+			'fr' => 'Région administrative connue (sert au rang régional)',
+			'es' => 'Región administrativa conocida (sirve para el orden regional)',
+		),
+		'q_fuseau'          => array(
+			'en' => 'Time zone known (working hours, shift cover)',
+			'fr' => 'Fuseau horaire connu (horaires, couverture d’équipes)',
+			'es' => 'Zona horaria conocida (horarios, cobertura de turnos)',
+		),
+		'q_langues'         => array(
+			'en' => 'Official languages of the country known',
+			'fr' => 'Langues officielles du pays connues',
+			'es' => 'Idiomas oficiales del país conocidos',
+		),
+		'q_voisines'        => array(
+			'en' => 'At least three other ranked cities to link to',
+			'fr' => 'Au moins trois autres villes classées à relier',
+			'es' => 'Al menos otras tres ciudades clasificadas que enlazar',
+		),
+		'q_taille'          => array(
+			'en' => 'City large enough to describe a labour market (25 000+)',
+			'fr' => 'Ville assez grande pour décrire un marché du travail (25 000+)',
+			'es' => 'Ciudad suficientemente grande para describir un mercado laboral (25 000+)',
+		),
+
+		'retour_pays'       => array( 'en' => 'All cities %s', 'fr' => 'Toutes les villes %s', 'es' => 'Todas las ciudades %s' ),
 		'accueil'           => array( 'en' => 'Home', 'fr' => 'Accueil', 'es' => 'Inicio' ),
 	);
 }

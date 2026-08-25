@@ -22,27 +22,27 @@ function rec_meta( array $r ): array {
 	if ( 'accueil' === $r['type'] ) {
 		return array(
 			'titre' => rec_t( 'marque', $l ) . ' — ' . array(
-				'en' => 'Corporate, call center and bulk hiring worldwide',
-				'fr' => 'Recrutement cadres, centres d’appels et volume, dans le monde entier',
-				'es' => 'Selección corporativa, call center y contratación masiva en todo el mundo',
+				'en' => 'Recruitment outsourcing: corporate, call center and high-volume hiring worldwide',
+				'fr' => 'Externalisation du recrutement : cadres, centres d’appels et volume, dans le monde entier',
+				'es' => 'Externalización de la selección: corporativa, call center y contratación masiva en todo el mundo',
 			)[ $l ],
 			'desc'  => array(
-				'en' => 'Hiring plans for corporate roles, call center and BPO teams and high-volume campaigns, built city by city from local labour market data.',
-				'fr' => 'Des plans de recrutement pour les postes cadres, les équipes de centres d’appels et les campagnes en volume, construits ville par ville à partir de données locales.',
-				'es' => 'Planes de contratación para puestos corporativos, equipos de call center y campañas de volumen, construidos ciudad a ciudad con datos locales.',
+				'en' => 'Outsource corporate hiring, call center and BPO staffing and high-volume campaigns. We run the process; the plan is built city by city from local labour market data.',
+				'fr' => 'Externalisez le recrutement de vos cadres, vos équipes de centres d’appels et BPO et vos campagnes en volume. Nous tenons le processus ; le plan se construit ville par ville à partir de données locales.',
+				'es' => 'Externalice la selección corporativa, la dotación de call center y BPO y las campañas de volumen. Operamos el proceso; el plan se construye ciudad a ciudad con datos locales.',
 			)[ $l ],
 		);
 	}
 
 	if ( 'pays' === $r['type'] ) {
-		$n = $r['pays']['nom'];
+		$n = rec_de_pays( $r['pays'], $l );
 		return array(
 			'titre' => sprintf( rec_t( 'h1_pays', $l ), $n ) . ' — ' . rec_t( 'marque', $l ),
 			'desc'  => sprintf( array(
-				'en' => 'The %d cities we cover %s, ranked by hiring potential, with corporate, call center and bulk hiring in each.',
-				'fr' => 'Les %d villes couvertes %s, classées par potentiel de recrutement, avec cadres, centres d’appels et volume dans chacune.',
-				'es' => 'Las %d ciudades que cubrimos %s, ordenadas por potencial de contratación, con selección corporativa, call center y volumen.',
-			)[ $l ], count( $r['pays']['villes'] ), rec_de_pays( $n, $l ) ),
+				'en' => 'The %d cities we cover %s, ranked by outsourcing potential, with corporate, call center and high-volume hiring outsourced in each.',
+				'fr' => 'Les %d villes couvertes %s, classées par potentiel d’externalisation, avec cadres, centres d’appels et volume dans chacune.',
+				'es' => 'Las %d ciudades que cubrimos %s, ordenadas por potencial de externalización, con selección corporativa, call center y volumen.',
+			)[ $l ], count( $r['pays']['villes'] ), rec_de_pays( $r['pays'], $l ) ),
 		);
 	}
 
@@ -51,13 +51,13 @@ function rec_meta( array $r ): array {
 
 	if ( 'ville' === $r['type'] ) {
 		return array(
-			'titre' => sprintf( rec_t( 'h1_ville', $l ), $v['nom'] ) . ', ' . $p['nom']
+			'titre' => sprintf( rec_t( 'h1_ville', $l ), $v['nom'] ) . ', ' . rec_nom_pays( $p, $l )
 				. ' — ' . rec_t( 'marque', $l ),
 			'desc'  => sprintf( array(
-				'en' => 'Hiring in %s, %s: %s residents, rank %d in the country. What the local market can supply, and how fast.',
-				'fr' => 'Recruter à %s, %s : %s habitants, rang %d dans le pays. Ce que le marché local peut fournir, et à quelle vitesse.',
-				'es' => 'Contratar en %s, %s: %s habitantes, puesto %d del país. Qué puede aportar el mercado local y a qué ritmo.',
-			)[ $l ], $v['nom'], $p['nom'], rec_nombre( (int) $v['population'], $l ),
+				'en' => 'Outsourcing hiring to %s, %s: %s residents, rank %d in the country. What the local market can supply, and how fast.',
+				'fr' => 'Externaliser son recrutement à %s, %s : %s habitants, rang %d dans le pays. Ce que le marché local peut fournir, et à quelle vitesse.',
+				'es' => 'Externalizar la selección en %s, %s: %s habitantes, puesto %d del país. Qué puede aportar el mercado local y a qué ritmo.',
+			)[ $l ], $v['nom'], rec_nom_pays( $p, $l ), rec_nombre( (int) $v['population'], $l ),
 				(int) $v['rang_pays'] ),
 		);
 	}
@@ -65,7 +65,7 @@ function rec_meta( array $r ): array {
 	$svc = rec_t( rec_service_cle( $r['service'] ), $l );
 	return array(
 		'titre' => sprintf( rec_t( 'h1_ville_svc', $l ), strip_tags( $svc ), $v['nom'] )
-			. ', ' . $p['nom'] . ' — ' . rec_t( 'marque', $l ),
+			. ', ' . rec_nom_pays( $p, $l ) . ' — ' . rec_t( 'marque', $l ),
 		'desc'  => trim( strip_tags( rec_texte_service( $r['service'], $p, $v, $l ) ) ),
 	);
 }
@@ -147,7 +147,7 @@ function rec_schema( array $r, string $base ): string {
 
 	$pousse( rec_t( 'accueil', $l ), rec_url( $l ) );
 	if ( isset( $r['pays'] ) ) {
-		$pousse( $r['pays']['nom'], rec_url( $l, $r['pays']['limace'] ) );
+		$pousse( rec_nom_pays( $r['pays'], $l ), rec_url( $l, $r['pays']['limace'] ) );
 	}
 	if ( isset( $r['ville'] ) ) {
 		$pousse( $r['ville']['nom'], rec_url( $l, $r['pays']['limace'], $r['ville']['limace'] ) );
