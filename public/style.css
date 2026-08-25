@@ -1,0 +1,154 @@
+/* Hiring Grid — plateforme de recrutement internationale.
+ *
+ * « Hiring Grid » est un NOM DE TRAVAIL, pas la marque : le client n'a pas
+ * encore donne de nom. Il se change en un endroit, dans rec_chaines().
+ *
+ * Sobre volontairement. C'est un site d'acquisition : il est lu par des
+ * responsables RH pressés et par un robot d'indexation, et aucun des deux
+ * n'est venu pour la decoration. Le contraste et la largeur de colonne
+ * comptent plus que l'effet.
+ */
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+:root{
+  --encre:#101720;
+  --encre-2:#3D4B5A;
+  --mut:#6B7A8B;
+  --trait:#E3E9EF;
+  --papier:#FFFFFF;
+  --gris:#F5F8FA;
+  --accent:#0F5F8A;       /* mesure 6.6:1 sur blanc */
+  --accent-d:#0B4767;
+  --accent-l:#E7F1F7;
+  --ambre:#8A5A00;
+  --r:12px;
+}
+
+body{
+  background:var(--papier);color:var(--encre-2);
+  font:16.5px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+    "Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{color:var(--encre);margin:0;font-weight:760;letter-spacing:-.02em;line-height:1.16}
+h1{font-size:clamp(29px,4.2vw,44px)}
+h2{font-size:clamp(21px,2.5vw,27px);margin:0 0 18px}
+h3{font-size:17px}
+p{margin:0 0 14px}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+.note{color:var(--mut);font-size:13.5px}
+
+/* ---------- entete ---------- */
+.top{border-bottom:1px solid var(--trait);background:var(--papier);
+  position:sticky;top:0;z-index:5}
+.bar{display:flex;align-items:center;justify-content:space-between;height:64px;gap:18px}
+.marque{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--encre);
+  text-decoration:none;font-size:17px}
+.pastille{width:32px;height:32px;border-radius:9px;background:var(--accent);color:#fff;
+  display:grid;place-items:center}
+.pastille svg{width:18px;height:18px}
+.nav{display:flex;align-items:center;gap:18px;font-size:14.5px;font-weight:650}
+.nav a{color:var(--encre-2);text-decoration:none}
+.nav a:hover{color:var(--accent)}
+.nav .lang{border:1px solid var(--trait);border-radius:100px;padding:5px 12px}
+
+/* ---------- bandeau de la porte de qualite ---------- */
+.bandeau-noindex{background:#FFF6E5;border-bottom:1px solid #F0DCB4;
+  color:var(--ambre);font-size:14px;font-weight:650}
+.bandeau-noindex .wrap{padding-top:10px;padding-bottom:10px}
+.bandeau-noindex .note{color:var(--ambre);opacity:.75;margin-left:8px}
+
+/* ---------- sections ---------- */
+.hero{padding:44px 0 34px;border-bottom:1px solid var(--trait)}
+.hero.grand{padding:76px 0 62px;background:linear-gradient(180deg,var(--accent-l),var(--papier))}
+.fil{font-size:13.5px;color:var(--mut);margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap}
+.fil a{color:var(--mut);text-decoration:none}
+.fil a:hover{color:var(--accent);text-decoration:underline}
+.chapo{font-size:18px;color:var(--encre-2);max-width:74ch;margin-top:14px}
+.bloc{padding:38px 0;border-bottom:1px solid var(--trait)}
+.bloc.gris{background:var(--gris)}
+
+/* ---------- les faits ---------- */
+/* Le fond du conteneur est BLANC, pas la couleur des traits : avec un
+   nombre impair de faits, la derniere cellule manquante laissait un pave
+   gris qui ressemblait a une donnee qui n'avait pas chargé. */
+.faits{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:1px;background:var(--papier);border:1px solid var(--trait);border-radius:var(--r);
+  overflow:hidden;margin:0}
+.faits>div{background:var(--papier);padding:14px 16px;box-shadow:0 0 0 1px var(--trait)}
+.faits dt{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--mut);font-weight:750;margin:0 0 4px}
+.faits dd{margin:0;font-size:19px;font-weight:750;color:var(--encre)}
+
+.consequences{margin:0;padding:0;list-style:none;display:grid;gap:12px;max-width:80ch}
+.consequences li{padding-left:26px;position:relative}
+.consequences li::before{content:"";position:absolute;left:4px;top:.62em;
+  width:9px;height:9px;border-radius:2px;background:var(--accent)}
+
+/* ---------- cartes ---------- */
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.carte{display:block;border:1px solid var(--trait);border-radius:var(--r);
+  padding:18px;background:var(--papier);text-decoration:none;color:inherit;
+  transition:border-color .16s,transform .16s}
+a.carte:hover{border-color:var(--accent);transform:translateY(-2px)}
+.carte h3{margin:0 0 7px;color:var(--encre)}
+.carte p{margin:0;font-size:14.5px;color:var(--encre-2)}
+
+/* ---------- classement ---------- */
+.classement{width:100%;border-collapse:collapse;font-size:15px}
+.classement th{text-align:left;font-size:12.5px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--mut);border-bottom:2px solid var(--trait);
+  padding:9px 10px}
+.classement td{border-bottom:1px solid var(--trait);padding:10px}
+/* Colonnes : # / Ville / Population / Score. Les deux chiffres a droite. */
+.classement td.num,.classement th:nth-child(3),.classement th:nth-child(4){text-align:right}
+.classement td.rg{color:var(--mut);width:40px;font-variant-numeric:tabular-nums}
+.classement tr:hover td{background:var(--accent-l)}
+.cap{color:var(--ambre)}
+
+.puces{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.puces a{display:inline-block;border:1px solid var(--trait);border-radius:100px;
+  padding:6px 14px;background:var(--papier);text-decoration:none;font-size:14.5px}
+.puces a:hover{border-color:var(--accent)}
+
+.pays-liste{list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 16px}
+.pays-liste li{display:flex;justify-content:space-between;gap:10px;
+  border-bottom:1px solid var(--trait);padding:6px 0;font-size:14.8px}
+.pays-liste a{text-decoration:none}
+.pays-liste a:hover{text-decoration:underline}
+
+.faq details{border:1px solid var(--trait);border-radius:var(--r);
+  background:var(--papier);padding:13px 16px;margin-bottom:9px}
+.faq summary{cursor:pointer;font-weight:700;color:var(--encre)}
+.faq p{margin:10px 0 0;font-size:15px}
+
+.cta{padding:46px 0;background:var(--accent);color:#fff}
+.cta h2,.cta p{color:#fff}
+.cta p{max-width:62ch;opacity:.94}
+.btn{display:inline-block;background:#fff;color:var(--accent-d);text-decoration:none;
+  font-weight:750;border-radius:100px;padding:12px 24px}
+.hero .btn{background:var(--accent);color:#fff}
+
+.porte .criteres{list-style:none;margin:0;padding:0;display:grid;gap:6px;
+  font-size:14.5px;max-width:70ch}
+.porte .criteres li.ok{color:var(--encre-2)}
+.porte .criteres li.ko{color:var(--mut)}
+
+.foot{padding:26px 0 44px}
+.foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  font-size:13.5px;color:var(--mut)}
+.foot-in .note{max-width:70ch}
+.lien-retour{font-weight:650}
+
+@media (max-width:640px){
+  .bar{height:auto;padding:12px 0;flex-wrap:wrap}
+  .faits{grid-template-columns:1fr 1fr}
+  /* Le score sort sur telephone : c'est un chiffre d'arbitrage interne, pas
+     ce qu'on vient chercher sur un ecran de 390 px. */
+  .classement th:nth-child(4),.classement td:nth-child(4){display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
